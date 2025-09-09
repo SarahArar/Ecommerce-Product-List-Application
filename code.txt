@@ -1,0 +1,400 @@
+
+
+let productListContainer = document.getElementById("product-list-container");
+let pagination;
+let cardActions;
+let quantityContainer;
+let addToCart;
+
+const numberOfItemsPerPage = 9;
+
+const selectDomElements = () => {
+  cardActions = document.querySelector(".card-actions");
+  pagination = document.getElementById("pagination");
+  quantityContainer = document.getElementById("quantity-container");
+  addToCart = document.getElementById("add-to-cart");
+};
+
+function getProducts() {
+  return PRODUCTS;
+}
+
+const getProductsView = (startingIndex) => {
+  let productsItems = ``;
+  productListContainer.innerHTML = ``;
+  const [startIndex, lastIndex] = getCardsStartEndIndices(startingIndex);
+  const products = PRODUCTS.slice(startIndex, lastIndex);
+
+  products.forEach((product) => {
+    let productItem = renderProductCard(product);
+    productsItems += productItem;
+  });
+
+  productListContainer.innerHTML = productsItems;
+};
+
+const getCardsStartEndIndices = (startingIndex) => {
+  const startIndex = startingIndex * numberOfItemsPerPage;
+  const lastIndex = startIndex + 9;
+
+  return [startIndex, lastIndex];
+};
+
+const renderProductCard = (product) => {
+  let productItem = `
+            <div class="product-card" data-id="${
+              product.id
+            }" aria-label="Dessert Option">
+                <div class="product-image-wrapper">
+                    <img class="product-image" src="${
+                      product.image.desktop
+                    }" alt="product-img">
+                
+                     ${getButtonView(product)}
+                </div>
+               `;
+
+  productItem += `  <div class="card-content">
+                    <h4 class="category regular-font fw-light">${product?.category}</h4>
+                    <h3 class="name medium-font semi-bold-fw text-overflow">${product?.name}</h3>
+                    <label class="price medium-font semi-bold-fw">${product.price}$</label>
+                </div>
+</div>
+        
+        `;
+
+  return productItem;
+};
+
+const getButtonView = (product) => {
+  return ` <button class="card-actions">
+                ${
+                  product.quantity === 0
+                    ? `<div class="add-to-cart">
+                            <i class="fa fa-cart-shopping cart-icon" aria-hidden="true"></i>
+                            <span class="regular-font semi-bold-fw">Add to Cart</span>
+                        </div>`
+                    : `
+                     <div class="quantity-container">
+                        <div class="quantity-btn minus" onclick="removeProductFromCart(${product.id})">-</div>
+                        <span class="quantity">${product.quantity}</span>
+                        <div class="quantity-btn plus" onclick="addProductToCart(${product.id})">+</div>
+                    </div>
+`
+                }
+            </button>
+           `;
+};
+
+const onBuyBtnClicked = (productId) => {};
+
+const handleBuyButtonView = () => {
+  <button class="card-actions">
+    $
+    {product.quantity === 0
+      ? `<div class="add-to-cart">
+                            <i class="fa fa-cart-shopping cart-icon" aria-hidden="true"></i>
+                            <span class="regular-font semi-bold-fw">Add to Cart</span>
+                        </div>`
+      : `
+                     <div class="quantity-container">
+                        <div class="quantity-btn minus" onclick="removeProductFromCart(${product.id})">-</div>
+                        <span class="quantity">${product.quantity}</span>
+                        <div class="quantity-btn plus" onclick="addProductToCart(${product.id})">+</div>
+                    </div>
+`}
+  </button>;
+};
+
+const addProductToCart = (productId) => {
+  const product = PRODUCTS.find((pro) => {
+    return pro.id === productId;
+  });
+  product.quantity = product.quantity + 1;
+
+  updateProductsView(product, productId);
+  handleBuyButtonView(productId);
+  updateCartItems();
+};
+
+const removeProductFromCart = (productId) => {
+  const product = PRODUCTS.find((pro) => {
+    return pro.id === productId;
+  });
+
+  if (product.quantity === 0) return;
+
+  if (product.quantity > 0) {
+    --product.quantity;
+  }
+
+  updateProductsView(product, productId);
+  handleBuyButtonView(productId);
+  updateCartItems();
+};
+
+const updateProductsView = (product, productId) => {
+  //Update Text inside Product Btn
+  const productElement = document.querySelector(
+    `.product-card[data-id="${productId}"]`
+  );
+
+  if (productElement && product.quantity > 0) {
+    const quantityDisplay = productElement.querySelector(".quantity");
+    quantityDisplay.textContent = product.quantity;
+  }
+
+  getCartTotal();
+};
+
+const updateCartItems = () => {
+  let cartItems = [];
+  PRODUCTS.forEach((product) => {
+    if (product.quantity > 0) {
+      cartItems.push(product);
+    }
+  });
+
+  const total = getCartTotal(cartItems);
+  createCart(cartItems, total);
+
+  return cartItems;
+};
+
+const getCartTotal = () => {
+  const total = PRODUCTS.reduce((accumulator, currentValue) => {
+    return accumulator + currentValue.quantity * currentValue.price;
+  }, 0);
+
+  return total;
+};
+
+const createCart = (cartItems, total) => {
+  let cartItemsContainer = document.getElementById("cart-items");
+
+  if (cartItems && cartItems.length) {
+    cartItemsContainer.innerHTML = "";
+    cartItemsContainer.style.alignItems = "start";
+    let cartProducts = document.createElement("div");
+    cartProducts = ``;
+    cartItems.forEach((cartItem) => {
+      cartProducts += `
+            <div class="cart-item-wrapper">
+               <div class="cart-item-data">
+                <h3 class="semi-bold-fw regular-font cart-item-name">${
+                  cartItem.name
+                }</h3>
+                <div class="cart-item-price-details">
+                       <span class="cart-item-quantity  semi-bold-fw">${
+                         cartItem.quantity
+                       }X</span>
+                 <div class="cart-item-price-data">
+                       <span class="cart-item-price">@ ${cartItem.price}</span>
+                       <span class="cart-item-total-price semi-bold-fw">${
+                         cartItem.quantity * cartItem.price
+                       }</span>
+                 </div>
+                 </div>
+                 
+                </div>
+                
+                <button class="close-icon" onclick="removeCartItem(${
+                  cartItem.id
+                })">
+                    <i class="fa fa-xmark"></i>
+                 </button>
+                
+            </div>
+            <div class="line-separator"></div>
+            `;
+    });
+
+    cartItemsContainer.innerHTML += `<div class="cart-products"> ${cartProducts} </div>`;
+
+    const totalSection = document.createElement("div");
+    totalSection.className = "cart-item-wrapper total";
+
+    totalSection.innerHTML = `
+    <h3 class="semi-bold-fw regular-font cart-item-name">Order Total</h3>
+    <span class="large-font fw-bold">$ ${total}</span>
+`;
+    cartItemsContainer.appendChild(totalSection);
+
+    let cartFooter = `
+        <div class="cart-delivery-legend regular-font">
+            <img src="assets/images/icon-carbon-neutral.svg">
+            <span>This is a <span class="semi-bold-fw">carbon-neutral</span> delivery</span>
+        </div>
+        
+        <button class="confirm-order-btn" onclick="openConfirmModal()">
+           Confirm Order
+        </button>
+        `;
+    cartItemsContainer.innerHTML += cartFooter;
+  } else {
+    cartItemsContainer.style.alignItems = "center";
+    cartItemsContainer.innerHTML = `
+              <div>
+                  <img src="./assets/images/illustration-empty-cart.svg">
+              </div>
+              <span class="regular-font add-items-label semi-bold-fw">Your added items will appear here</span>`;
+  }
+};
+
+const openConfirmModal = () => {
+  showShadow();
+  showConfirmationModal();
+};
+
+const showConfirmationModal = () => {
+  const modal = document.querySelector(".modal");
+  const modalBody = document.querySelector(".modal-body");
+  const modalFooter = document.querySelector(".modalFooter");
+  const bodyContent = createModalBodyContent();
+  modalBody.appendChild(bodyContent);
+  modal.appendChild(modalBody);
+  modal.appendChild(modalFooter);
+  modal.classList.add("show-modal");
+};
+
+const createModalBodyContent = () => {
+  const modalBody = document.querySelector(".modal-body");
+  modalBody.innerHTML = "";
+  const checkOutProducts = PRODUCTS.filter((pr) => pr.quantity > 0);
+  checkOutProducts.forEach((product) => {
+    const checkOutItem = document.createElement("div");
+    checkOutItem.classList.add("check-out-product");
+    checkOutItem.innerHTML = `
+            <div class="checkout-item">
+               <div class="checkout-item-details">
+                 <div class="checkout-item-img">
+                   <img src="${product.image.desktop}">
+                 </div>
+                   <div class="checkout-item-data">
+                      <div class="name medium-font semi-bold-fw text-overflow">${product.name}</div>
+                      <div>
+                          <span class="cart-item-quantity semi-bold-fw">${product.quantity}x</span>
+                          <span class="price medium-font semi-bold-fw">@ ${product.price}$</span>
+                     </div>
+                   </div>
+               </div>
+            </div>
+         `;
+    modalBody.appendChild(checkOutItem);
+  });
+
+  const totalCheckOutProducts = document.createElement("div");
+  totalCheckOutProducts.classList.add("checkout-item-total-price");
+  totalCheckOutProducts.classList.add("semi-bold-fw");
+  totalCheckOutProducts.innerHTML = `
+           <span>Order Total</span>
+           <span>$ ${getCartTotal()}</span>
+        `;
+  modalBody.appendChild(totalCheckOutProducts);
+
+  return modalBody;
+};
+
+const createPageShadow = () => {
+  const shadow = document.createElement("div");
+  shadow.classList.add("drop-shadow");
+  document.body.appendChild(shadow);
+};
+
+const showShadow = () => {
+  const shadow = document.querySelector(".drop-shadow");
+  shadow.classList.add("show-shadow");
+};
+
+const removeCartItem = (productItemId) => {
+  const cartItems = updateCartItems();
+  const itemToDelete = cartItems.find((item) => {
+    return item.id === productItemId;
+  });
+
+  if (itemToDelete) {
+    itemToDelete.quantity = 0;
+    updateProductsView(itemToDelete, itemToDelete.id);
+    handleBuyButtonView(itemToDelete.id);
+  }
+
+  updateCartItems();
+};
+
+const getNumberOfPages = (productsCount) => {
+  let pageNumbers = Math.floor(productsCount / numberOfItemsPerPage);
+
+  if (productsCount % numberOfItemsPerPage != 0) {
+    pageNumbers = pageNumbers + 1;
+  }
+
+  return pageNumbers;
+};
+
+const paginationCreator = (numberOfPages) => {
+  for (let i = 0; i < numberOfPages; i++) {
+    const pageNumber = document.createElement("button");
+    pageNumber.innerText = `${i + 1}`;
+    pageNumber.classList.add("page-number");
+    pageNumber.addEventListener("click", () => {
+      getProductsView(i);
+    });
+
+    pagination.appendChild(pageNumber);
+  }
+};
+
+const startNewOrder = () => {
+  const modal = document.querySelector(".modal");
+  const dropdownShadow = document.querySelector(".drop-shadow");
+
+  modal.classList.add("hide-modal");
+  dropdownShadow.classList.remove("show-shadow");
+};
+
+const createModal = () => {
+  const modal = document.createElement("div");
+  const modalHeader = document.createElement("div");
+  const modalBody = document.createElement("div");
+  const modalFooter = document.createElement("div");
+
+  modal.classList.add("modal");
+  modalHeader.classList.add("modal-header");
+  modalBody.classList.add("modal-body");
+  modalFooter.classList.add("modal-footer");
+
+  modalHeader.innerHTML = `
+         <div>
+             <img src="./assets/images/icon-order-confirmed.svg">
+         </div>
+         <div>
+             <div class="semi-large-font ">Order Confirmed</div>
+             <span>We hope you enjoy your food!</span>
+        </div>
+     `;
+
+  modalFooter.innerHTML = `
+     <button class="confirm-order-btn" onclick="startNewOrder()">
+           Start New Order
+        </button>
+    `;
+
+  modal.appendChild(modalHeader);
+  document.body.appendChild(modal);
+};
+
+const init = () => {
+  const productItems = getProducts();
+
+  console.log("productItems", productItems);
+
+  // getProductsView(0, numberOfItemsPerPage);
+  // selectDomElements();
+  // paginationCreator(numberOfPages);
+  // createCart();
+
+  //   createPageShadow();
+  //   createModal();
+};
+
+init();
